@@ -3,6 +3,7 @@ const express = require('express');
 const Stripe = require('stripe');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const { addSubscriber, setSubscriptionStatus } = require('./db');
 
 const app = express();
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
@@ -49,12 +50,32 @@ app.post('/webhook', bodyParser.raw({ type: 'application/json' }), (req, res) =>
   switch (event.type) {
     case 'checkout.session.completed':
       // TODO: store subscriber email in DB
+            const session = event.data.object;
+      const email = session.customer_details?.email || session.customer_email;
+      const customerId = session.customer;
+      if (email && customerId) {
+        addSubscriber(email, customerId);
+      }
       break;
     case 'invoice.paid':
-      // TODO: mark subscription as active
+      
+            {
+        const invoice = event.data.object;
+        const email = invoice.customer_email || invoice.customer_details?.email;
+        if (email) {
+          setSubscriptionStatus(email, 'active');
+        }
+      }// TODO: mark subscription as active
       break;
     case 'invoice.payment_failed':
-      // TODO: mark subscription as past_due
+     
+            {
+        const invoice = event.data.object;
+        const email = invoice.customer_email || invoice.customer_details?.email;
+        if (email) {
+          setSubscriptionStatus(email, 'past_due');
+        }
+      }// TODO: mark subscription as past_due
       break;
     default:
       console.log(`Unhandled event type ${event.type}`);
