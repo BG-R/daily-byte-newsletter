@@ -84,4 +84,5 @@ app.post('/webhook', bodyParser.raw({ type: 'application/json' }), (req, res) =>
 });
 
 const PORT = process.env.PORT || 4242;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`))
+  require('./newsletter');;
